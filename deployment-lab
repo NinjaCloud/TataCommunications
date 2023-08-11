@@ -106,3 +106,6 @@ kubectl apply -f ds-pod.yaml
 kubectl get ds fluent-ds
 kubectl get pods -o wide
 kubectl delete -f ds-pod.yaml
+
+
+https://quizizz.com/join?gc=157712
