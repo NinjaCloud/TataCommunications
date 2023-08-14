@@ -108,4 +108,113 @@ kubectl get pods -o wide
 kubectl delete -f ds-pod.yaml
 
 
-https://quizizz.com/join?gc=157712
+Lab 5: Dyanmic Provisioning
+
+vi pv-claim.yaml
+
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: dynamic-claim
+spec:
+  storageClassName: default
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+
+
+kubectl create -f dynamic-claim.yaml
+
+vi dynamic-pod.yaml
+
+kind: Pod
+apiVersion: v1
+metadata:
+  name: dynamic-pod
+spec:
+  volumes:
+    - name: dynamic-storage
+      persistentVolumeClaim:
+       claimName: dynamic-claim
+  containers:
+    - name: dynamic-container
+      image: nginx
+      ports:
+        - containerPort: 80
+          name: "http-server"
+      volumeMounts:
+        - mountPath: "/usr/share/nginx/html"
+          name: dynamic-storage
+
+
+kubectl create -f dynamic-pod.yaml
+kubectl get pods
+
+kubectl exec -it dynamic-pod bash
+# lsblk
+
+kubectl delete -f dynamic-pod.yaml
+kubectl delete -f dynamic-claim.yaml 
+
+
+
+Lab 6: StatefulSet Implementation
+Task 1:  Creating a StatefulSet
+
+wget files.cloudthat.training/devops/kubernetes-essentials/nginx-sts.yaml
+
+kubectl apply -f nginx-sts.yaml
+
+kubectl get service nginx-svc 
+kubectl get statefulset nginx-sts
+kubectl get pods -w -l app=nginx-sts
+
+for i in 0 1; do kubectl exec "nginx-sts-$i" -- sh -c 'hostname'; done
+
+kubectl run -i --tty --image busybox:1.28 dns-test --restart=Never --rm
+
+nslookup nginx-sts-0.nginx-svc
+nslookup nginx-sts-1.nginx-svc
+
+exit
+
+kubectl delete pod -l app=nginx-sts
+kubectl get pod -w -l app=nginx-sts
+
+for i in 0 1; do kubectl exec "nginx-sts-$i" -- sh -c 'hostname'; done
+
+Task 2: Writing to a Scalable Storage
+
+kubectl get pvc -l app=nginx-sts
+
+for i in 0 1; do kubectl exec "nginx-sts-$i" -- sh -c 'echo "$(hostname)" > /usr/share/nginx/html/index.html'; done
+
+for i in 0 1; do kubectl exec -i -t "nginx-sts-$i" -- curl http://localhost/; done
+
+Task 3: Scaling StatefulSet
+
+kubectl scale sts nginx-sts --replicas=5
+kubectl get pods -w -l app=nginx-sts
+
+kubectl get pods -l app=nginx-sts
+kubectl get pvc -l app=nginx-sts
+
+kubectl edit sts nginx-sts
+
+# Set spec: replicas to 3, Press Esc and :wq! to exit vi
+
+kubectl get pods -w -l app=nginx-sts
+kubectl get pvc -l app=nginx-sts
+
+Task 4: Rolling Update
+
+kubectl edit sts nginx-sts
+
+# Change the spec: conatiners: image value to nginx:latest, Press Esc and :wq! to exit vi
+
+kubectl get pod -l app=nginx-sts -w
+kubectl get pods
+kubectl describe pod nginx-sts-0 | grep Image
+kubectl delete -f nginx-sts.yaml
