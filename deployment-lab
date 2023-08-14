@@ -272,3 +272,16 @@ kubectl get pod -l app=nginx-sts -w
 kubectl get pods
 kubectl describe pod nginx-sts-0 | grep Image
 kubectl delete -f nginx-sts.yaml
+
+
+
+
+
+Feedback :
+https://www.metricsthatmatter.com/url/u.aspx?04E28F621200808645
+
+Post Assessment Test:
+https://forms.office.com/r/D35WAkaGdJ
+
+
+
